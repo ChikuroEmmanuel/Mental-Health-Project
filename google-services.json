@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "336454679951",
+    "project_id": "youthcare-app",
+    "storage_bucket": "youthcare-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:336454679951:android:ef833830b9ac9d1d805ffa",
+        "android_client_info": {
+          "package_name": "com.youthcareapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAZB1ij3hsuDWtpve21bOoQsnCd2m8VamY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
