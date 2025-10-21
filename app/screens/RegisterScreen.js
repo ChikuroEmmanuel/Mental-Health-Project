@@ -1,4 +1,6 @@
-import { Link } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 import { useState } from 'react';
 import {
   Alert,
@@ -12,8 +14,13 @@ import {
   View,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
+import { auth, db } from '../../firebaseConfig'; // Adjust the path '..' if needed
 
-const RegisterScreen = ({ navigation }) => {
+
+
+const RegisterScreen = () => {
+  const router = useRouter();
+  
   // State hooks to manage the input fields
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -21,7 +28,7 @@ const RegisterScreen = ({ navigation }) => {
   const [confirmPassword, setConfirmPassword] = useState('');
 
   // Function to handle the account creation logic
-  const handleCreateAccount = () => {
+  const handleCreateAccount = async () => {
     // 1. Basic Validation
     if (!fullName || !email || !password || !confirmPassword) {
       Alert.alert('Validation Error', 'Please fill in all fields.');
@@ -32,17 +39,39 @@ const RegisterScreen = ({ navigation }) => {
       return;
     }
 
-    // 2. Placeholder for API call
-    // In a real application, you would send this data to your server here.
-    console.log('Creating account with the following data:');
-    console.log({ fullName, email, password });
+    try {
+      // Create user in Firebase Authentication
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
 
-    // 3. Provide user feedback
-    Alert.alert(
-      'Success!',
-      'Your account has been created successfully.',
-      [{ text: 'OK', onPress: () => console.log('OK Pressed') }]
-    );
+      // Store additional user data in Firestore
+      // Creates a document in the 'users' collection with the user's UID as the document ID
+      await setDoc(doc(db, "users", user.uid), {
+        fullName: fullName,
+        email: email,
+      });
+
+      Alert.alert(
+        'Success!',
+        'Your account has been created successfully.',
+        [
+          {
+            text: 'OK',
+            onPress: () => router.push('/'), // Navigates to the login page
+          }
+        ]
+      );
+    } catch (error) {
+      console.error("Error creating account: ", error);
+      // Provide user-friendly error messages
+      if (error.code === 'auth/email-already-in-use') {
+        Alert.alert('Error', 'That email address is already in use!');
+      } else if (error.code === 'auth/invalid-email') {
+        Alert.alert('Error', 'That email address is invalid!');
+      } else {
+        Alert.alert('Error', error.message);
+      }
+    }
   };
 
   return (
