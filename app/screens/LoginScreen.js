@@ -1,12 +1,15 @@
-import { Link } from 'expo-router';
-import { useState } from 'react';
+import { Link, useRouter } from 'expo-router';
+import { PhoneAuthProvider, signInWithEmailAndPassword } from "firebase/auth";
+import { useRef, useState } from 'react';
 import { SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View, } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
+import { auth } from '../../firebaseConfig';
 
 const LoginScreen = () => {
-  // State hooks to store user input
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const recaptchaVerifier = useRef(null);
 
   // Function to handle the sign-in process
   const handleSignIn = () => {
@@ -15,12 +18,39 @@ const LoginScreen = () => {
       alert('Please enter both email and password.');
       return;
     }
-    // For demonstration, we'll just log the credentials.
-    // In a real app, you would implement your authentication logic here.
-    console.log('Attempting to sign in with:');
-    console.log('Email:', email);
-    console.log('Password:', password);
-    alert('Sign-in successful! (See console for details)');
+    
+    signInWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+          router.replace('/home');
+        })
+        .catch(async (error) => {
+                // This is the important part for MFA
+                if (error.code === 'auth/multi-factor-required') {
+                    try {
+                        const mfaResolver = error.resolver;
+                        const phoneInfo = mfaResolver.hints[0]; // Assuming the first hint is the phone
+                        
+                        const phoneAuthProvider = new PhoneAuthProvider(auth);
+                        const verificationId = await phoneAuthProvider.verifyPhoneNumber(
+                            phoneInfo,
+                            recaptchaVerifier.current
+                        );
+
+                        // Navigate to the OTP screen, passing the verificationId
+                        router.push({
+                            pathname: '/otp',
+                            params: { verificationId: verificationId, resolver: mfaResolver }
+                        });
+
+                    } catch (verifyError) {
+                        console.log("MFA Verification Error:", verifyError);
+                        alert(`MFA Error: ${verifyError.message}`);
+                    }
+                } else {
+                    // Handle other errors like wrong password
+                    alert(`Login Error: ${error.message}`);
+                }
+            });
   };
 
   return (

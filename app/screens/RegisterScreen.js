@@ -1,5 +1,5 @@
 import { Link, useRouter } from 'expo-router';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { useState } from 'react';
 import {
@@ -20,17 +20,18 @@ import { auth, db } from '../../firebaseConfig'; // Adjust the path '..' if need
 
 const RegisterScreen = () => {
   const router = useRouter();
-  
+
   // State hooks to manage the input fields
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
   // Function to handle the account creation logic
   const handleCreateAccount = async () => {
     // 1. Basic Validation
-    if (!fullName || !email || !password || !confirmPassword) {
+    if (!fullName || !email || !phoneNumber || !password || !confirmPassword) {
       Alert.alert('Validation Error', 'Please fill in all fields.');
       return;
     }
@@ -44,16 +45,19 @@ const RegisterScreen = () => {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
+      await sendEmailVerification(user);
+
       // Store additional user data in Firestore
       // Creates a document in the 'users' collection with the user's UID as the document ID
       await setDoc(doc(db, "users", user.uid), {
         fullName: fullName,
         email: email,
+        phoneNumber: phoneNumber,
       });
 
       Alert.alert(
-        'Success!',
-        'Your account has been created successfully.',
+        'Account Created!',
+        'A verification email has been sent. Please check your inbox.',
         [
           {
             text: 'OK',
@@ -113,6 +117,18 @@ const RegisterScreen = () => {
             value={email}
             onChangeText={setEmail}
           />
+
+          <Text style={styles.label}>Phone Number</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="+254712345678"
+            placeholderTextColor="#aaa"
+            keyboardType="phone-pad"
+            autoComplete="tel"
+            value={phoneNumber}
+            onChangeText={setPhoneNumber}
+          />
+
 
           <Text style={styles.label}>Password</Text>
           <TextInput
