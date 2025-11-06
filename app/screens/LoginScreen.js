@@ -4,6 +4,8 @@ import { useRef, useState } from 'react';
 import { SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View, } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { auth } from '../../firebaseConfig';
+import { setMfaResolver } from './LoginOTPScreen';
+
 
 const LoginScreen = () => {
   const router = useRouter();
@@ -37,6 +39,7 @@ const LoginScreen = () => {
                         );
 
                         // Navigate to the OTP screen, passing the verificationId
+                        setMfaResolver(mfaResolver); // Store the resolver
                         router.push({
                             pathname: '/otp',
                             params: { verificationId: verificationId, resolver: mfaResolver }

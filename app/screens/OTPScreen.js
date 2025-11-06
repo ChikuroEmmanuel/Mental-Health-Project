@@ -24,8 +24,8 @@ const OTPScreen = () => {
             // Complete the sign-in process with the second factor
             await auth.currentUser.multiFactor.enroll(multiFactorAssertion, "My Phone Number");
             
-            Alert.alert("Success!", "You have been logged in successfully.");
-            router.replace('/home'); // Navigate to the home screen
+            Alert.alert("Success!", "Two-Factor Authentication has been enabled.",[{ text: "OK", onPress: () => router.back() }] // Go back to profile
+            );
         } catch (error) {
             console.error("OTP Confirmation Error: ", error);
             Alert.alert("Error", "The code you entered was incorrect. Please try again.");
