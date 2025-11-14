@@ -5,15 +5,15 @@ import { onAuthStateChanged, PhoneAuthProvider, sendPasswordResetEmail, signOut 
 import { doc, getDoc } from 'firebase/firestore'; // For fetching user full name
 import { useEffect, useRef, useState } from 'react';
 import {
-    ActivityIndicator, // For toggles
-    Alert,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Switch,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator, // For toggles
+  Alert,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { auth, db } from '../../firebaseConfig'; // Adjust path if needed
 
