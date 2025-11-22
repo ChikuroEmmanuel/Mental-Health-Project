@@ -1,4 +1,5 @@
 import { FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'; // 2. Added FontAwesome
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
@@ -15,17 +16,36 @@ import {
 import { auth, db } from '../../firebaseConfig';
 import styles from '../styles/HomeScreen.styles';
 
+const affirmations = [
+  "You are strong, capable, and resilient.",
+  "Be kind to yourself today. You're doing your best.",
+  "Your feelings are valid. It's okay to feel them.",
+  "Every small step forward is still progress.",
+  "You are deserving of peace and happiness.",
+  "It's okay to rest and recharge.",
+  "You have the power to create a positive change.",
+  "Your mental health matters, and seeking support is a sign of strength.", // <-- Added this one!
+  "It's okay to not be okay, and it's okay to ask for help.",
+  "You are loved, valued, and enough.",
+];
+
 const HomeScreen = () => {
   const router = useRouter();
   const [user, setUser] = useState(null); 
   const [menuVisible, setMenuVisible] = useState(false);
   const [userFullName, setUserFullName] = useState('');
   const [greeting, setGreeting] = useState('Welcome'); // 3. Add state for greeting
-  const [selectedMood, setSelectedMood] = useState('Happy');
-
+  const [currentAffirmation, setCurrentAffirmation] = useState('');
+  
+  // --- Function to get a random affirmation ---
+  const getRandomAffirmation = () => {
+    const randomIndex = Math.floor(Math.random() * affirmations.length);
+    setCurrentAffirmation(affirmations[randomIndex]);
+  };
 
   // Check for logged-in user and fetch their name
   useEffect(() => {
+    getRandomAffirmation();
     // 4. Set the greeting based on the time of day
     const hour = new Date().getHours();
     if (hour < 12) {
@@ -126,69 +146,31 @@ const HomeScreen = () => {
           </View>
         </View>
         
-        {/* --- Mood Tracking Section  --- */}
-        <Text style={styles.sectionTitle}>Mood Tracking</Text>
-        <View style={styles.moodCard}>
-          <Text style={styles.moodCardTitle}>How are you feeling right now?</Text>
-          <View style={styles.moodsContainer}>
-            
-            {/* Sad */}
+        {/* --- Daily Affirmations Section  --- */}
+        <Text style={styles.sectionTitle}>Daily Affirmation</Text>
+        <LinearGradient
+          colors={['#8A2BE2', '#6A0DAD']} // Purple gradient colors
+          style={styles.affirmationCard}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          <View style={styles.affirmationContent}>
+            <MaterialCommunityIcons 
+              name="sparkles" // Sparkle icon
+              size={40} 
+              color="#fff" 
+              style={styles.affirmationSparkleIcon} 
+            />
+            <Text style={styles.affirmationText}>{currentAffirmation}</Text>
             <TouchableOpacity 
-              style={styles.moodItem} 
-              onPress={() => setSelectedMood('Sad')}
+              style={styles.newAffirmationButton} 
+              onPress={getRandomAffirmation}
             >
-              <View style={[styles.moodIconContainer, selectedMood === 'Sad' && styles.selectedMoodIcon]}>
-                <MaterialCommunityIcons name="emoticon-sad-outline" size={32} color={selectedMood === 'Sad' ? '#8A2BE2' : '#fff'} />
-              </View>
-              <Text style={[styles.moodText, selectedMood === 'Sad' && styles.selectedMoodText]}>Sad</Text>
+              <MaterialCommunityIcons name="cached" size={18} color="#fff" />
+              <Text style={styles.newAffirmationButtonText}>New Affirmation</Text>
             </TouchableOpacity>
-
-            {/* Angry */}
-            <TouchableOpacity 
-              style={styles.moodItem} 
-              onPress={() => setSelectedMood('Angry')}
-            >
-              <View style={[styles.moodIconContainer, selectedMood === 'Angry' && styles.selectedMoodIcon]}>
-                <MaterialCommunityIcons name="emoticon-angry-outline" size={32} color={selectedMood === 'Angry' ? '#8A2BE2' : '#fff'} />
-              </View>
-              <Text style={[styles.moodText, selectedMood === 'Angry' && styles.selectedMoodText]}>Angry</Text>
-            </TouchableOpacity>
-
-            {/* Happy */}
-            <TouchableOpacity 
-              style={styles.moodItem} 
-              onPress={() => setSelectedMood('Happy')}
-            >
-              <View style={[styles.moodIconContainer, selectedMood === 'Happy' && styles.selectedMoodIcon]}>
-                <MaterialCommunityIcons name="emoticon-happy-outline" size={32} color={selectedMood === 'Happy' ? '#8A2BE2' : '#fff'} />
-              </View>
-              <Text style={[styles.moodText, selectedMood === 'Happy' && styles.selectedMoodText]}>Happy</Text>
-            </TouchableOpacity>
-
-            {/* Calm */}
-            <TouchableOpacity 
-              style={styles.moodItem} 
-              onPress={() => setSelectedMood('Calm')}
-            >
-              <View style={[styles.moodIconContainer, selectedMood === 'Calm' && styles.selectedMoodIcon]}>
-                <MaterialCommunityIcons name="emoticon-neutral-outline" size={32} color={selectedMood === 'Calm' ? '#8A2BE2' : '#fff'} />
-              </View>
-              <Text style={[styles.moodText, selectedMood === 'Calm' && styles.selectedMoodText]}>Calm</Text>
-            </TouchableOpacity>
-
-            {/* Anxious */}
-            <TouchableOpacity 
-              style={styles.moodItem} 
-              onPress={() => setSelectedMood('Anxious')}
-            >
-              <View style={[styles.moodIconContainer, selectedMood === 'Anxious' && styles.selectedMoodIcon]}>
-                <MaterialCommunityIcons name="emoticon-frown-outline" size={32} color={selectedMood === 'Anxious' ? '#8A2BE2' : '#fff'} />
-              </View>
-              <Text style={[styles.moodText, selectedMood === 'Anxious' && styles.selectedMoodText]}>Anxious</Text>
-            </TouchableOpacity>
-
           </View>
-        </View>
+        </LinearGradient>
 
         {/* --- AI Mental Health Support Card */}
         <Text style={styles.sectionTitle}>AI Mental Health Support</Text>

@@ -2,52 +2,105 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
-    Animated,
-    SafeAreaView,
-    StyleSheet,
-    Text, // Import the Animated API
-    TouchableOpacity,
-    View,
+  Animated, // For the circle animation
+  Pressable,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
+import styles from '../styles/BreathingScreen.styles.js'; // We will create this
 
 const BreathingScreen = () => {
   const router = useRouter();
-  const [instruction, setInstruction] = useState('Get Ready...');
   
-  // Create an animated value, starting at 0.5 (small)
-  const scaleAnim = useRef(new Animated.Value(0.5)).current;
+  // State for the exercise logic
+  const [instruction, setInstruction] = useState('Breathe in slowly through your nose');
+  const [phase, setPhase] = useState('idle'); // 'idle', 'inhale', 'hold', 'exhale'
+  const [countdown, setCountdown] = useState(4);
+  const [isStarted, setIsStarted] = useState(false);
+  
+  // Refs for managing animations and timers
+  const scaleAnim = useRef(new Animated.Value(1)).current; // Start at normal size
+  const countdownInterval = useRef(null);
+  const phaseTimeout = useRef(null);
 
-  // This useEffect hook will run once and loop the animation
+  // This effect controls the entire animation loop
   useEffect(() => {
-    const runAnimation = () => {
-      // 1. Inhale (4 seconds)
-      setInstruction('Inhale for 4s');
-      Animated.timing(scaleAnim, {
-        toValue: 1, // Grow to full size
-        duration: 4000,
-        useNativeDriver: true, // For smooth performance
-      }).start(() => {
-        // 2. Hold (4 seconds)
-        setInstruction('Hold for 4s');
-        // We use a simple setTimeout for the hold duration
-        setTimeout(() => {
-          // 3. Exhale (4 seconds)
-          setInstruction('Exhale for 4s');
-          Animated.timing(scaleAnim, {
-            toValue: 0.5, // Shrink back to small size
-            duration: 4000,
-            useNativeDriver: true,
-          }).start(() => {
-            // 4. Restart the loop
-            // Add a small pause before restarting
-            setTimeout(runAnimation, 1000);
-          });
-        }, 4000); // This is the 4-second hold
-      });
+    if (!isStarted) {
+      // If paused or idle, clear all timers and stop animation
+      clearInterval(countdownInterval.current);
+      clearTimeout(phaseTimeout.current);
+      scaleAnim.stopAnimation();
+      return; // Do nothing else
+    }
+
+    // Function to run the 4-second countdown
+    const runCountdown = () => {
+      setCountdown(4); // Reset to 4
+      countdownInterval.current = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(countdownInterval.current);
+            return 1;
+          }
+          return prev - 1;
+        });
+      }, 1000);
     };
 
-    runAnimation(); // Start the animation loop
-  }, [scaleAnim]);
+    // Function to start a new phase (inhale, hold, exhale)
+    const startPhase = (nextPhase) => {
+      setPhase(nextPhase);
+      runCountdown(); // Start the countdown for this phase
+      
+      if (nextPhase === 'inhale') {
+        setInstruction('Breathe in slowly through your nose');
+        Animated.timing(scaleAnim, {
+          toValue: 1.5, // Grow
+          duration: 4000,
+          useNativeDriver: true,
+        }).start();
+        // After 4s, move to 'hold'
+        phaseTimeout.current = setTimeout(() => startPhase('hold'), 4000);
+
+      } else if (nextPhase === 'hold') {
+        setInstruction('Hold your breath gently');
+        // No animation, just hold
+        // After 4s, move to 'exhale'
+        phaseTimeout.current = setTimeout(() => startPhase('exhale'), 4000);
+
+      } else if (nextPhase === 'exhale') {
+        setInstruction('Breathe out slowly through your mouth');
+        Animated.timing(scaleAnim, {
+          toValue: 1, // Shrink back to normal
+          duration: 4000,
+          useNativeDriver: true,
+        }).start();
+        // After 4s, loop back to 'inhale'
+        phaseTimeout.current = setTimeout(() => startPhase('inhale'), 4000);
+      }
+    };
+
+    // Start the very first cycle
+    startPhase('inhale');
+
+    // Cleanup function when component unmounts or [isStarted] changes
+    return () => {
+      clearInterval(countdownInterval.current);
+      clearTimeout(phaseTimeout.current);
+    };
+  }, [isStarted, scaleAnim]); // Re-run this effect when isStarted changes
+
+  // Function to handle the button press
+  const handleStartPause = () => {
+    setIsStarted(!isStarted); // Toggle the 'isStarted' state
+  };
+
+  // Close the modal
+  const handleClose = () => {
+    setIsStarted(false); // Stop the animation
+    router.back();
+  };
 
   // Style for the animated circle
   const animatedCircleStyle = {
@@ -55,55 +108,45 @@ const BreathingScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Back Button */}
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-        <Ionicons name="arrow-back" size={28} color="#333" />
-      </TouchableOpacity>
+    <Pressable style={styles.backdrop} onPress={handleClose}>
+      <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
+        {/* Close Button */}
+        <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
+          <Ionicons name="close" size={28} color="#aaa" />
+        </TouchableOpacity>
 
-      <View style={styles.exerciseContainer}>
-        {/* The Animated Circle */}
-        <Animated.View style={[styles.circle, animatedCircleStyle]} />
-        
-        {/* The Instruction Text */}
-        <Text style={styles.instructionText}>{instruction}</Text>
-      </View>
-    </SafeAreaView>
+        <Text style={styles.title}>Breathing Exercise</Text>
+
+        {/* Animated Circle & Countdown */}
+        <View style={styles.circleContainer}>
+          <Animated.View style={[styles.circle, animatedCircleStyle]}>
+            <Text style={styles.countdownText}>
+              {isStarted ? countdown : 4}
+            </Text>
+            <Text style={styles.phaseText}>
+              {isStarted ? phase.charAt(0).toUpperCase() + phase.slice(1) : "Ready"}
+            </Text>
+          </Animated.View>
+        </View>
+
+        {/* Instructions */}
+        <Text style={styles.instructionText}>
+          {isStarted ? instruction : 'Breathe in slowly through your nose'}
+        </Text>
+        <Text style={styles.subtitle}>Follow the 4-4-4 breathing pattern</Text>
+
+        {/* Start / Pause Button */}
+        <TouchableOpacity 
+          style={[styles.button, isStarted ? styles.pauseButton : styles.startButton]}
+          onPress={handleStartPause}
+        >
+          <Text style={styles.buttonText}>
+            {isStarted ? 'Pause' : 'Start Exercise'}
+          </Text>
+        </TouchableOpacity>
+      </Pressable>
+    </Pressable>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f8f7ff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  backButton: {
-    position: 'absolute',
-    top: 60,
-    left: 20,
-    zIndex: 10,
-  },
-  exerciseContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  circle: {
-    width: 250,
-    height: 250,
-    borderRadius: 125,
-    backgroundColor: 'rgba(138, 43, 226, 0.3)', // Light purple
-    borderWidth: 10,
-    borderColor: 'rgba(138, 43, 226, 0.6)', // Darker purple border
-  },
-  instructionText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#8A2BE2',
-    position: 'absolute',
-  },
-});
 
 export default BreathingScreen;

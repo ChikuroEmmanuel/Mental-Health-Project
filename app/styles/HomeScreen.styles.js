@@ -84,52 +84,51 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 
-  // --- 4. New Styles for Mood Tracking ---
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 15,
-  },
-  moodCard: {
-    backgroundColor: '#8A2BE2', // Main purple color
-    borderRadius: 20,
+  // --- 4. New Styles for Daily Affirmation ---
+  affirmationCard: {
+    borderRadius: 16,
+    marginBottom: 25,
     padding: 20,
+    alignItems: 'center', // Center content horizontally
+    justifyContent: 'center', // Center content vertically
+    minHeight: 200, // Give it a minimum height
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  affirmationContent: {
     alignItems: 'center',
-  },
-  moodCardTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
-    marginBottom: 20,
-  },
-  moodsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
-  },
-  moodItem: {
-    alignItems: 'center',
-  },
-  moodIconContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
     justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)', // Translucent white
-    marginBottom: 8,
+    flex: 1, // Allow content to take up space
   },
-  selectedMoodIcon: {
-    backgroundColor: '#fff', // Solid white when selected
+  affirmationSparkleIcon: {
+    marginBottom: 15, // Space below the icon
   },
-  moodText: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.8)', // Faded white
-  },
-  selectedMoodText: {
-    color: '#fff',
+  affirmationText: {
+    fontSize: 20,
     fontWeight: 'bold',
+    color: '#fff', // White text for the gradient background
+    textAlign: 'center',
+    lineHeight: 28,
+    marginBottom: 20, // Space above the button
+  },
+  newAffirmationButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.5)', // Semi-transparent white border
+    backgroundColor: 'rgba(255,255,255,0.1)', // Slightly transparent background
+  },
+  newAffirmationButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 8,
   },
 
   // --- STYLES for the Chat Card ---
