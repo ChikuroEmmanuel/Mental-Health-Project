@@ -193,7 +193,10 @@ const HomeScreen = () => {
             <MaterialCommunityIcons name="chat-outline" size={20} color="#fff" />
             <Text style={styles.chatButtonTextPrimary}>Start Chatting</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.chatButtonSecondary}>
+          <TouchableOpacity 
+            style={styles.chatButtonSecondary}
+            onPress={() => router.push('/history')}
+            >
             <MaterialCommunityIcons name="history" size={20} color="#8A2BE2" />
             <Text style={styles.chatButtonTextSecondary}>My Conversations</Text>
           </TouchableOpacity>

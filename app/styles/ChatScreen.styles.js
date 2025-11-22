@@ -1,6 +1,5 @@
 import { StyleSheet } from 'react-native';
 
-// --- Stylesheet ---
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
@@ -10,9 +9,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 40,
+    paddingHorizontal: 20,
+    paddingVertical: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
+    backgroundColor: '#fff',
+  },
+  headerTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginLeft: 10,
   },
   headerIcon: {
     width: 36,
@@ -23,10 +30,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 10,
   },
-  headerTitleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
   headerTitle: {
     fontSize: 16,
     fontWeight: 'bold',
@@ -36,13 +39,57 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#8A2BE2',
   },
+  newChatButton: {
+    padding: 5,
+  },
+  
+  // --- Chat Area ---
   keyboardAvoidingContainer: {
     flex: 1,
   },
-  chatContainer: {
+ chatContainer: {
     flex: 1,
-    padding: 10,
     backgroundColor: '#f8f7ff', // Light purple background
+  },
+  // Style for when messages exist (Standard list)
+  chatContentContainer: {
+    paddingBottom: 20,
+    padding: 10,
+  },
+  // Style for when NO messages exist (Allows centering)
+  emptyChatContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 30,
+  },
+
+  // --- NEW EMPTY STATE STYLES ---
+  emptyStateBox: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyStateIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#e6e6fa', // Light purple circle
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  emptyStateTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  emptyStateSubtitle: {
+    fontSize: 15,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 22,
   },
   messageBubble: {
     maxWidth: '80%',
@@ -53,20 +100,22 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   botBubble: {
-    backgroundColor: '#e6e6fa', // Light purple bubble
+    backgroundColor: '#fff', // Clean white for bot
     alignSelf: 'flex-start',
     borderTopLeftRadius: 0,
+    borderWidth: 1,
+    borderColor: '#e6e6fa',
   },
   userBubble: {
-    backgroundColor: '#8A2BE2', // Dark purple bubble
+    backgroundColor: '#8A2BE2',
     alignSelf: 'flex-end',
     borderTopRightRadius: 0,
   },
   botIcon: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: '#fff',
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#e6e6fa',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 8,
@@ -75,58 +124,66 @@ const styles = StyleSheet.create({
   messageTextContainer: {
     flex: 1,
   },
-  // --- CORRECTED STYLES ---
   messageText: {
-    fontSize: 16,
+    fontSize: 15,
     color: '#333',
+    lineHeight: 22,
   },
   userMessageText: {
-    color: '#fff', // White text for user messages
+    color: '#fff',
   },
   messageTime: {
-    fontSize: 12,
+    fontSize: 10,
     color: '#999',
     alignSelf: 'flex-end',
-    marginTop: 5,
+    marginTop: 4,
   },
   userMessageTime: {
-    color: '#eee', // Lighter time text for user messages
+    color: 'rgba(255,255,255,0.7)',
   },
-  // --- (End of corrections) ---
+
+  // --- Input Bar ---
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 15,
+    paddingHorizontal: 10,
     paddingVertical: 10,
     borderTopWidth: 1,
     borderTopColor: '#f0f0f0',
     backgroundColor: '#fff',
   },
+  toolsButton: {
+    padding: 8,
+    marginRight: 5,
+  },
   input: {
     flex: 1,
-    minHeight: 44,
-    maxHeight: 120, // To allow multiline but not take over screen
+    minHeight: 40,
+    maxHeight: 100,
     backgroundColor: '#f0f0f5',
-    borderRadius: 22,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+    borderRadius: 20,
+    paddingHorizontal: 15,
+    paddingVertical: 8,
     fontSize: 16,
     marginRight: 10,
   },
   sendButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: '#8A2BE2',
     justifyContent: 'center',
     alignItems: 'center',
   },
+  sendButtonDisabled: {
+    backgroundColor: '#ccc',
+  },
   disclaimer: {
-    fontSize: 10,
+    fontSize: 11,
     color: '#999',
     textAlign: 'center',
     paddingBottom: 10,
-    paddingHorizontal: 15,
+    paddingTop: 5,
     backgroundColor: '#fff',
   },
 });
