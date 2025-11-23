@@ -209,45 +209,79 @@ const styles = StyleSheet.create({
   },
   
   // --- NEW STYLES for Quick Self Care ---
+sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 15,
+    marginTop: 25,
+  },
   quickCard: {
     backgroundColor: '#fff',
     borderRadius: 16,
-    padding: 15,
+    paddingVertical: 20,
+    paddingHorizontal: 15,
     marginBottom: 15,
-    flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'center', // Center everything horizontally
+    justifyContent: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
-    elevation: 3,
+    elevation: 2, // Subtle shadow for Android
+    borderWidth: 1,
+    borderColor: '#f0f0f0', // Very light border
   },
   quickIconContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 15,
+    marginBottom: 12, // Space between icon and text
   },
   quickIconBlue: {
-    backgroundColor: '#E0F0F8', // Light blue
+    backgroundColor: '#E3F2FD', // Light blue background
   },
   quickIconGreen: {
-    backgroundColor: '#D9E8D8', // Light green
+    backgroundColor: '#E8F5E9', // Light green background
   },
-  quickTextContainer: {
-    flex: 1,
+  quickIconPurple: {
+    backgroundColor: '#F3E5F5', // Light purple background
+  },
+  quickContent: {
+    alignItems: 'center', // Center text
   },
   quickTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
     color: '#333',
+    marginBottom: 4,
+    textAlign: 'center',
   },
   quickSubtitle: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#666',
-    marginTop: 2,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  
+  // --- Daily Tip Style ---
+  tipCard: {
+    backgroundColor: '#F0F8FF', // Very light blue
+    borderRadius: 16,
+    padding: 20,
+    marginTop: 10,
+    marginBottom: 30,
+  },
+  tipText: {
+    fontSize: 14,
+    color: '#444',
+    lineHeight: 22,
+  },
+  tipIcon: {
+    fontWeight: 'bold',
+    color: '#333',
   },
   
 });

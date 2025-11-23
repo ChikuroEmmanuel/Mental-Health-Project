@@ -229,6 +229,28 @@ const HomeScreen = () => {
           </View>
         </TouchableOpacity>
 
+        { /* My Tasks Card */ }
+        <TouchableOpacity 
+          style={styles.quickCard} 
+          onPress={() => router.push('/tasks')} // Assuming you have a route for tasks
+        >
+          <View style={[styles.quickIconContainer, styles.quickIconPurple]}>
+            <MaterialCommunityIcons name="checkbox-marked-circle-outline" size={28} color="#AF52DE" />
+          </View>
+          <View style={styles.quickContent}>
+            <Text style={styles.quickTitle}>My Tasks</Text>
+            <Text style={styles.quickSubtitle}>Manage your daily self-care tasks</Text>
+          </View>
+        </TouchableOpacity>
+
+        {/* Daily Tip Card */}
+        <View style={styles.tipCard}>
+          <Text style={styles.tipText}>
+            <Text style={styles.tipIcon}>💡 Daily Tip: </Text>
+            Take a few moments each day to check in with yourself. Tracking your mood helps you identify patterns and triggers.
+          </Text>
+        </View>
+
       
         
 
