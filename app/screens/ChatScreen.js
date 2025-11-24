@@ -1,15 +1,14 @@
 import { FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Audio } from 'expo-av';
 import { useRouter } from 'expo-router';
 import { onAuthStateChanged } from 'firebase/auth';
 import {
   addDoc,
-  collection, // <--- NEW
-  doc,
+  collection,
   onSnapshot,
   orderBy,
-  query, // <--- NEW
-  serverTimestamp,
-  setDoc
+  query,
+  serverTimestamp
 } from 'firebase/firestore';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -41,117 +40,155 @@ const ChatScreen = () => {
   const [uid, setUid] = useState(null);
   const [chatMessages, setChatMessages] = useState([]);
 
+  // --- Audio Recording State ---
+  const [recording, setRecording] = useState();
+  const [isRecording, setIsRecording] = useState(false);
+  const [audioUri, setAudioUri] = useState(null);
+  const [sound, setSound] = useState(); 
+
   // --- Load Session & Messages ---
   useEffect(() => {
     setSessionId(uuid.v4());
-
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       if (user) {
         setUid(user.uid);
-
         const messagesRef = collection(db, 'users', user.uid, 'chatMessages');
         const q = query(messagesRef, orderBy('createdAt', 'asc'));
-
         const unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
           const loadedMessages = snapshot.docs.map(doc => ({
             id: doc.id,
             sender: doc.data().sender,
             text: doc.data().text,
             time: doc.data().createdAt?.toDate().toLocaleTimeString().substring(0, 5) || 'just now',
+            audioUri: doc.data().audioUri || null 
           }));
-
-          if (loadedMessages.length > 0) {
-            setChatMessages(loadedMessages);
-          } else {
-            setChatMessages([]); // Empty state
-          }
+          if (loadedMessages.length > 0) setChatMessages(loadedMessages);
+          else setChatMessages([]);
         });
-
         return () => unsubscribeSnapshot();
       } else {
         router.replace('/');
       }
     });
-
     return () => unsubscribeAuth();
   }, [router]);
 
-  // --- Handle New Chat (Reset) ---
-  const handleNewChat = () => {
-    Alert.alert(
-      "Start New Conversation?",
-      "This will clear the current screen and start a fresh topic.",
-      [
-        { text: "Cancel", style: "cancel" },
-        { 
-          text: "Start New", 
-          onPress: () => {
-            const newId = uuid.v4();
-            setSessionId(newId);
-            setChatMessages([]); // Clear screen
-          }
-        }
-      ]
-    );
+  // --- Audio Functions ---
+  async function startRecording() {
+    try {
+      const permission = await Audio.requestPermissionsAsync();
+      if (permission.status === 'granted') {
+        await Audio.setAudioModeAsync({
+          allowsRecordingIOS: true,
+          playsInSilentModeIOS: true,
+        });
+        const { recording } = await Audio.Recording.createAsync(
+           Audio.RecordingOptionsPresets.HIGH_QUALITY
+        );
+        setRecording(recording);
+        setIsRecording(true);
+      } else {
+        Alert.alert("Permission Denied", "We need microphone access to record audio.");
+      }
+    } catch (err) {
+      console.error('Failed to start recording', err);
+    }
+  }
+
+  async function stopRecording() {
+    if (!recording) return;
+    setIsRecording(false);
+    await recording.stopAndUnloadAsync();
+    const uri = recording.getURI(); 
+    setRecording(undefined);
+    console.log('Recording stopped and stored at', uri);
+    setAudioUri(uri); 
+  }
+
+  async function playSound(uri) {
+      const soundUri = uri || audioUri;
+      if(soundUri){
+        const { sound } = await Audio.Sound.createAsync({ uri: soundUri });
+        setSound(sound);
+        await sound.playAsync();
+      }
+  }
+
+  const cancelRecording = () => {
+    setAudioUri(null); 
   };
 
-  // --- Handle Sending Messages ---
-  const handleSend = async () => {
-    if (message.trim() === '' || isLoading || !uid) return;
-    
-    const textToSend = message;
-    setMessage(''); 
-    setIsLoading(true);
+  const handleNewChat = () => {
+    Alert.alert(
+        "Start New Conversation?",
+        "This will clear the current screen and start a fresh topic.",
+        [
+          { text: "Cancel", style: "cancel" },
+          { 
+            text: "Start New", 
+            onPress: () => {
+              setSessionId(uuid.v4());
+              setChatMessages([]);
+            }
+          }
+        ]
+      );
+  };
 
-    // 1. Add User Message to UI
+  const handleSend = async () => {
+    // Logic: Send if there is text OR audio
+    if ((message.trim() === '' && !audioUri) || isLoading || !uid) return;
+    
+    setIsLoading(true);
+    let textToSend = message;
+    let messageType = 'text';
+    let audioUrlToSend = null;
+
+    if (audioUri) {
+        // If sending audio, change text to placeholder
+        // If text is empty, use "Audio Message", else keep user's text caption
+        textToSend = message.trim() === '' ? "Audio Message" : message; 
+        messageType = 'audio';
+        audioUrlToSend = audioUri;
+    }
+
     const newUserMessage = {
       id: uuid.v4(),
       sender: 'user',
       text: textToSend,
+      audioUri: audioUrlToSend,
       time: new Date().toLocaleTimeString().substring(0, 5)
     };
     setChatMessages(prev => [...prev, newUserMessage]);
 
-    // 2. Save Message to Firestore (chatMessages collection)
     const messagesRef = collection(db, 'users', uid, 'chatMessages');
     await addDoc(messagesRef, {
       text: textToSend,
       sender: 'user',
       createdAt: serverTimestamp(),
       sessionId: sessionId,
+      audioUri: audioUrlToSend, 
+      type: messageType
     });
-
-    // 3. --- NEW: Update Conversation Metadata (conversations collection) ---
-    // This creates/updates a document with the ID of the sessionId
-    await setDoc(doc(db, 'users', uid, 'conversations', sessionId), {
-      lastMessage: textToSend,
-      lastActive: serverTimestamp(),
-      sessionId: sessionId
-    }, { merge: true }); 
-    // { merge: true } ensures we don't overwrite other fields if we add them later
 
     let botReplyText = '';
 
     try {
-      // 4. Fetch from API
       const response = await fetch(`${API_URL}/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: textToSend,
+          message: textToSend, 
           session_id: sessionId, 
         }),
       });
-
       const data = await response.json();
       botReplyText = response.ok ? data.answer : `Error: ${data.detail || 'Failed'}`;
-
     } catch (error) {
       console.error("Fetch error:", error);
       botReplyText = "I'm having trouble connecting right now. Please check your internet connection.";
     }
 
-    // 5. Add Bot Reply to UI
     const botReply = {
       id: uuid.v4(),
       sender: 'bot',
@@ -160,27 +197,20 @@ const ChatScreen = () => {
     };
     setChatMessages(prev => [...prev, botReply]);
 
-    // 6. Save Bot Reply to Firestore
     await addDoc(messagesRef, {
       text: botReplyText,
       sender: 'bot',
       createdAt: serverTimestamp(),
       sessionId: sessionId,
     });
-
-    // 7. --- NEW: Update Conversation Metadata with Bot Reply ---
-    await setDoc(doc(db, 'users', uid, 'conversations', sessionId), {
-      lastMessage: botReplyText,
-      lastActive: serverTimestamp(),
-      sessionId: sessionId
-    }, { merge: true });
     
+    setMessage('');
+    setAudioUri(null);
     setIsLoading(false);
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {/* --- Header --- */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
           <MaterialCommunityIcons name="arrow-left" size={24} color="#333" />
@@ -194,14 +224,11 @@ const ChatScreen = () => {
             <Text style={styles.headerSubtitle}>Always here for you</Text>
           </View>
         </View>
-        
-        {/* NEW CHAT BUTTON */}
         <TouchableOpacity onPress={handleNewChat} style={styles.newChatButton}>
           <MaterialCommunityIcons name="restart" size={24} color="#8A2BE2" />
         </TouchableOpacity>
       </View>
 
-      {/* --- Chat Area --- */}
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardAvoidingContainer}
@@ -211,12 +238,9 @@ const ChatScreen = () => {
           style={styles.chatContainer}
           contentContainerStyle={chatMessages.length === 0 ? styles.emptyChatContainer : styles.chatContentContainer}
           ref={scrollViewRef} 
-          onContentSizeChange={() => 
-            scrollViewRef.current?.scrollToEnd({ animated: true }) 
-          }
+          onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
         >
           {chatMessages.length === 0 ? (
-            /* --- EMPTY STATE --- */
             <View style={styles.emptyStateBox}>
               <View style={styles.emptyStateIconContainer}>
                 <MaterialCommunityIcons name="robot-happy-outline" size={40} color="#8A2BE2" />
@@ -227,39 +251,35 @@ const ChatScreen = () => {
               </Text>
             </View>
           ) : (
-            /* --- CHAT MESSAGES --- */
             chatMessages.map((msg) => (
-              <View 
-                key={msg.id} 
-                style={[
-                  styles.messageBubble,
-                  msg.sender === 'user' ? styles.userBubble : styles.botBubble
-                ]}
-              >
+              <View key={msg.id} style={[styles.messageBubble, msg.sender === 'user' ? styles.userBubble : styles.botBubble]}>
                 {msg.sender === 'bot' && (
                   <View style={styles.botIcon}>
                     <MaterialCommunityIcons name="robot-happy-outline" size={16} color="#8A2BE2" />
                   </View>
                 )}
                 <View style={styles.messageTextContainer}>
-                  <Text style={[
-                    styles.messageText,
-                    msg.sender === 'user' && styles.userMessageText
-                  ]}>
-                    {msg.text}
-                  </Text>
-                  <Text style={[
-                    styles.messageTime,
-                    msg.sender === 'user' && styles.userMessageTime
-                  ]}>
+                    {msg.audioUri ? (
+                        <View style={styles.audioBubbleContainer}>
+                             <TouchableOpacity onPress={() => playSound(msg.audioUri)}>
+                                <MaterialCommunityIcons name="play-circle-outline" size={32} color={msg.sender === 'user' ? '#fff' : '#8A2BE2'} />
+                            </TouchableOpacity>
+                            <Text style={[styles.messageText, msg.sender === 'user' && styles.userMessageText]}>
+                                {msg.text === "Audio Message" ? "Audio Message" : msg.text}
+                            </Text>
+                        </View>
+                    ) : (
+                        <Text style={[styles.messageText, msg.sender === 'user' && styles.userMessageText]}>
+                            {msg.text}
+                        </Text>
+                    )}
+                  <Text style={[styles.messageTime, msg.sender === 'user' && styles.userMessageTime]}>
                     {msg.time}
                   </Text>
                 </View>
               </View>
             ))
           )}
-
-          {/* Loading Indicator */}
           {isLoading && (
             <View style={{ padding: 10, alignItems: 'flex-start' }}>
                <View style={[styles.botBubble, { padding: 10 }]}>
@@ -269,30 +289,89 @@ const ChatScreen = () => {
           )}
         </ScrollView>
 
-        {/* --- Input Bar --- */}
         <View style={styles.inputContainer}>
-          <TouchableOpacity style={styles.toolsButton} onPress={() => Alert.alert("Tools", "Shortcuts coming soon.")}>
-            <Ionicons name="add" size={24} color="#8A2BE2" />
-          </TouchableOpacity>
+            
+            {/* HIGHLIGHT 1: Input Area
+                If audio is recorded, show PREVIEW.
+                If NOT recorded, show TEXT INPUT. 
+            */}
+            {audioUri ? (
+                <View style={styles.audioPreviewContainer}>
+                    <TouchableOpacity onPress={() => playSound(audioUri)}>
+                        <MaterialCommunityIcons name="play-circle-outline" size={32} color="#8A2BE2" />
+                    </TouchableOpacity>
+                    <Text style={styles.audioText}>Audio Recorded</Text>
+                    <TouchableOpacity onPress={cancelRecording}>
+                        <Ionicons name="trash-outline" size={24} color="#FF3B30" />
+                    </TouchableOpacity>
+                </View>
+            ) : (
+                <>
+                  <TouchableOpacity style={styles.toolsButton} onPress={() => Alert.alert("Tools", "Shortcuts coming soon.")}>
+                    <Ionicons name="add" size={24} color="#8A2BE2" />
+                  </TouchableOpacity>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Type your message..."
-            value={message}
-            onChangeText={setMessage}
-            multiline
-            editable={!isLoading}
-          />
-          <TouchableOpacity 
-            style={[styles.sendButton, isLoading && styles.sendButtonDisabled]}
-            onPress={handleSend}
-            disabled={isLoading}
+                  <TextInput
+                    style={styles.input}
+                    placeholder={isRecording ? "Recording..." : "Type your message..."}
+                    value={message}
+                    onChangeText={setMessage}
+                    multiline
+                    editable={!isLoading && !isRecording}
+                  />
+                </>
+            )}
+
+          {/* HIGHLIGHT 2: Send/Mic Button Logic
+             - If Recording -> Show Stop
+             - If Text OR Audio exists -> Show SEND
+             - Else -> Show Mic
+          */}
+          <View style={styles.actionButtonsContainer}>
+            {isRecording ? (
+                <TouchableOpacity 
+                    style={[styles.iconButton, styles.micButtonActive]} 
+                    onPress={stopRecording}
+                >
+                    <Ionicons name="stop" size={20} color="#fff" />
+                </TouchableOpacity>
+            ) : (message.trim() !== '' || audioUri) ? (
+                // Show SEND button if text OR audio is present
+                <TouchableOpacity 
+                    style={[styles.iconButton, styles.sendButton, isLoading && styles.sendButtonDisabled]}
+                    onPress={handleSend}
+                    disabled={isLoading}
+                >
+                    <FontAwesome name="send" size={18} color="#fff" />
+                </TouchableOpacity>
+            ) : (
+                <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                  {/* Mic Button */}
+                  <TouchableOpacity style={[styles.iconButton, styles.micButton]} onPress={startRecording}>
+                     <Ionicons name="mic" size={20} color="#fff" />
+
+                  </TouchableOpacity>
+
+                  {/* Send button */}
+                  <TouchableOpacity 
+                    style={[
+                      styles.iconButton, 
+                      styles.sendButton, 
+                      styles.sendButtonDisabled
+                    ]}
+                    disabled={true}
           >
-            <FontAwesome name="send" size={18} color="#fff" />
-          </TouchableOpacity>
+                    <FontAwesome name="send" size={18} color="#fff" />
+                  </TouchableOpacity>
+                </View>
+
+                  
+            )}
+          </View>
+
         </View>
         
-        <TouchableOpacity onPress={() => Alert.alert("Safety", "Emergency contacts...")}>
+        <TouchableOpacity onPress={() => Alert.alert("Safety", "Here are emergency contacts...")}>
           <Text style={styles.disclaimer}>
             This is a supportive chatbot. <Text style={{textDecorationLine: 'underline'}}>Tap for emergency resources.</Text>
           </Text>

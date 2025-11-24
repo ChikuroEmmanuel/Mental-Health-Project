@@ -9,8 +9,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 20,
+    padding: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
     backgroundColor: '#fff',
@@ -42,54 +41,25 @@ const styles = StyleSheet.create({
   newChatButton: {
     padding: 5,
   },
-  
+
   // --- Chat Area ---
   keyboardAvoidingContainer: {
     flex: 1,
   },
- chatContainer: {
+  chatContainer: {
     flex: 1,
-    backgroundColor: '#f8f7ff', // Light purple background
-  },
-  // Style for when messages exist (Standard list)
-  chatContentContainer: {
-    paddingBottom: 20,
     padding: 10,
+    backgroundColor: '#f8f7ff',
   },
-  // Style for when NO messages exist (Allows centering)
   emptyChatContainer: {
     flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 30,
   },
-
-  // --- NEW EMPTY STATE STYLES ---
-  emptyStateBox: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyStateIconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#e6e6fa', // Light purple circle
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  emptyStateTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  emptyStateSubtitle: {
-    fontSize: 15,
-    color: '#666',
-    textAlign: 'center',
-    lineHeight: 22,
+  chatContentContainer: {
+    paddingBottom: 20,
+    padding: 10,
   },
   messageBubble: {
     maxWidth: '80%',
@@ -100,7 +70,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   botBubble: {
-    backgroundColor: '#fff', // Clean white for bot
+    backgroundColor: '#fff',
     alignSelf: 'flex-start',
     borderTopLeftRadius: 0,
     borderWidth: 1,
@@ -142,6 +112,41 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.7)',
   },
 
+  // --- Audio Bubble Styles ---
+  audioBubbleContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10
+  },
+
+  // --- Empty State Styles ---
+  emptyStateBox: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyStateIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#e6e6fa',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  emptyStateTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  emptyStateSubtitle: {
+    fontSize: 15,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+
   // --- Input Bar ---
   inputContainer: {
     flexDirection: 'row',
@@ -166,14 +171,47 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     fontSize: 16,
     marginRight: 10,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
   },
-  sendButton: {
+  // --- Audio Preview Styles ---
+  audioPreviewContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f0f0f5',
+    borderRadius: 20,
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    marginRight: 10,
+    justifyContent: 'space-between',
+  },
+  audioText: {
+    fontSize: 16,
+    color: '#333',
+    fontWeight: '500',
+  },
+  // --- Action Buttons Styles ---
+  actionButtonsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  iconButton: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: '#8A2BE2',
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  micButton: {
+    backgroundColor: '#007AFF',
+  },
+  micButtonActive: {
+    backgroundColor: '#FF3B30',
+  },
+  sendButton: {
+    backgroundColor: '#8A2BE2',
   },
   sendButtonDisabled: {
     backgroundColor: '#ccc',

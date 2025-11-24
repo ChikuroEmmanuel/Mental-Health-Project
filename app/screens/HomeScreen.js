@@ -242,6 +242,22 @@ const HomeScreen = () => {
             <Text style={styles.quickSubtitle}>Manage your daily self-care tasks</Text>
           </View>
         </TouchableOpacity>
+        
+        {/* Study Focus Timer Card */}
+        <TouchableOpacity 
+          style={styles.quickCard} 
+          onPress={() => router.push('/focus')}
+        >
+          <View style={[styles.quickIconContainer, styles.quickIconPurple]}>
+            <MaterialCommunityIcons name="timer-outline" size={28} color="#AF52DE" />
+          </View>
+          <View style={styles.quickContent}>
+            <Text style={styles.quickTitle}>Study Focus Timer</Text>
+            <Text style={styles.quickSubtitle}>Use the Pomodoro technique to study effectively</Text>
+          </View>
+        </TouchableOpacity>
+
+
 
         {/* Daily Tip Card */}
         <View style={styles.tipCard}>
